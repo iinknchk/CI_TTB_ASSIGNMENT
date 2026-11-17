@@ -1,0 +1,270 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TTB Automation Launcher</title>
+<style>
+  :root {
+    color-scheme: light dark;
+    --bg:#f6f7f9; --panel:#ffffff; --fg:#17191c; --soft:#5f6570;
+    --line:#e2e5ea; --accent:#0b63d6; --pass:#1a7f37; --fail:#c3272b; --warn:#9a6700;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#101215; --panel:#191c20; --fg:#e8eaed; --soft:#9aa0a6;
+            --line:#2a2e34; --accent:#5aa0ff; }
+  }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg);
+         font:14px/1.55 -apple-system, "Segoe UI", Roboto, "Noto Sans Thai", sans-serif; }
+  .wrap { max-width:1080px; margin:0 auto; padding:28px 16px 60px; }
+  header { display:flex; align-items:baseline; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  h1 { font-size:21px; margin:0; letter-spacing:-.01em; }
+  .project { color:var(--soft); font-size:12px; font-family:var(--mono); word-break:break-all; }
+  .panel { background:var(--panel); border:1px solid var(--line); border-radius:12px;
+           padding:18px; margin-top:18px; }
+  .panel h2 { font-size:12px; text-transform:uppercase; letter-spacing:.07em;
+              color:var(--soft); margin:0 0 14px; font-weight:600; }
+  .suites { display:grid; gap:10px; grid-template-columns:repeat(auto-fill, minmax(230px, 1fr)); }
+  .suite { text-align:left; background:transparent; color:inherit; cursor:pointer;
+           border:1px solid var(--line); border-radius:10px; padding:12px 14px; font:inherit; }
+  .suite:hover { border-color:var(--accent); }
+  .suite[aria-pressed="true"] { border-color:var(--accent);
+           box-shadow:inset 0 0 0 1px var(--accent); }
+  .suite b { display:block; font-size:14px; margin-bottom:2px; }
+  .suite span { color:var(--soft); font-size:12px; }
+  .row { display:flex; gap:14px; flex-wrap:wrap; align-items:flex-end; margin-top:16px; }
+  label { display:block; font-size:12px; color:var(--soft); margin-bottom:5px; }
+  select, input[type=text] { font:inherit; padding:7px 9px; border-radius:8px;
+           border:1px solid var(--line); background:var(--panel); color:inherit; min-width:150px; }
+  .check { display:flex; align-items:center; gap:7px; font-size:13px; }
+  button.primary { font:inherit; font-weight:600; cursor:pointer; border:0; border-radius:9px;
+           padding:9px 20px; background:var(--accent); color:#fff; }
+  button.primary:disabled { opacity:.5; cursor:default; }
+  button.ghost { font:inherit; cursor:pointer; border:1px solid var(--line);
+           border-radius:9px; padding:8px 14px; background:transparent; color:inherit; }
+  .status { margin-left:auto; font-size:13px; color:var(--soft); }
+  .cards { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:14px; }
+  .card { flex:1 1 90px; border:1px solid var(--line); border-radius:10px; padding:11px;
+          text-align:center; }
+  .card b { display:block; font-size:22px; } .card span { font-size:11px; color:var(--soft); }
+  .card.pass b { color:var(--pass); } .card.fail b { color:var(--fail); }
+  .card.skip b { color:var(--warn); }
+  pre.console { font-family:var(--mono); font-size:12px; line-height:1.45; margin:0;
+          max-height:330px; overflow:auto; white-space:pre-wrap; word-break:break-word;
+          background:var(--bg); border:1px solid var(--line); border-radius:9px; padding:12px; }
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th,td { text-align:left; padding:7px 9px; border-bottom:1px solid var(--line); }
+  th { font-size:11px; text-transform:uppercase; letter-spacing:.05em; color:var(--soft); }
+  .pill { font-size:11px; font-weight:700; padding:2px 7px; border-radius:20px; }
+  .pill.PASS,.pill.passed { background:rgba(26,127,55,.15); color:var(--pass); }
+  .pill.FAIL,.pill.failed { background:rgba(195,39,43,.15); color:var(--fail); }
+  .pill.SKIP,.pill.queued,.pill.running { background:rgba(154,103,0,.15); color:var(--warn); }
+  a { color:var(--accent); }
+  .muted { color:var(--soft); font-size:12px; }
+  .hidden { display:none; }
+  @media (max-width:560px) { .wrap { padding:18px 16px 48px; } .status { margin-left:0; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <h1>TTB Automation Launcher</h1>
+    <span class="project" id="project"></span>
+  </header>
+  <p class="muted">Pick a suite, press Run. Each run gets its own folder under
+     <code>Results/Launcher/</code> with log.html, report.html and Test_Summary.html.</p>
+
+  <section class="panel">
+    <h2>1 &middot; Choose what to run</h2>
+    <div class="suites" id="suites"></div>
+
+    <div class="row">
+      <div>
+        <label for="env">ENV</label>
+        <select id="env"><option value="PUBLIC">PUBLIC</option></select>
+      </div>
+      <div>
+        <label for="browser">Browser (Q2)</label>
+        <select id="browser">
+          <option value="chromium">chromium</option>
+          <option value="firefox">firefox</option>
+          <option value="webkit">webkit</option>
+        </select>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="headless" checked>
+        <label for="headless" style="margin:0">headless</label>
+      </div>
+      <div>
+        <label for="tags">Only these tags (optional)</label>
+        <input type="text" id="tags" placeholder="smoke, negative">
+      </div>
+      <button class="primary" id="run" disabled>Run</button>
+      <button class="ghost" id="check">Check machine</button>
+      <span class="status" id="status">pick a suite</span>
+    </div>
+  </section>
+
+  <section class="panel hidden" id="live">
+    <h2>2 &middot; Current run &mdash; <span id="runId"></span>
+        <span class="pill" id="runPill"></span></h2>
+    <div class="cards" id="cards"></div>
+    <pre class="console" id="console">waiting for the first output…</pre>
+    <p class="muted" id="links"></p>
+  </section>
+
+  <section class="panel">
+    <h2>3 &middot; Recent runs</h2>
+    <table>
+      <thead><tr><th>Run</th><th>Status</th><th>Pass</th><th>Fail</th><th>Reports</th></tr></thead>
+      <tbody id="runs"><tr><td colspan="5" class="muted">no runs yet</td></tr></tbody>
+    </table>
+  </section>
+
+</div>
+
+<script>
+"use strict";
+const $ = (id) => document.getElementById(id);
+let selected = null, poller = null, currentRun = null;
+
+async function api(path, body) {
+  const options = body
+    ? { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }
+    : {};
+  const answer = await fetch(path, options);
+  return answer.json();
+}
+
+function drawSuites(suites) {
+  $("suites").innerHTML = "";
+  suites.forEach((suite) => {
+    const button = document.createElement("button");
+    button.className = "suite";
+    button.type = "button";
+    button.setAttribute("aria-pressed", "false");
+    button.innerHTML = `<b></b><span></span>`;
+    button.querySelector("b").textContent = suite.label;
+    button.querySelector("span").textContent = suite.note;
+    button.onclick = () => {
+      selected = suite.key;
+      document.querySelectorAll(".suite").forEach((other) =>
+        other.setAttribute("aria-pressed", String(other === button)));
+      $("run").disabled = false;
+      $("status").textContent = `ready: ${suite.label}`;
+    };
+    $("suites").appendChild(button);
+  });
+}
+
+function drawRuns(runs) {
+  const body = $("runs");
+  if (!runs.length) {
+    body.innerHTML = '<tr><td colspan="5" class="muted">no runs yet</td></tr>';
+    return;
+  }
+  body.innerHTML = "";
+  runs.forEach((run) => {
+    const totals = run.totals || {};
+    const row = document.createElement("tr");
+    const reports = [];
+    if (run.report) reports.push(`<a href="${run.report}" target="_blank">report</a>`);
+    if (run.summary) reports.push(`<a href="${run.summary}" target="_blank">summary</a>`);
+    row.innerHTML = `<td><code>${run.run_id}</code></td>
+      <td><span class="pill ${run.status}">${run.status}</span></td>
+      <td>${totals.PASS || 0}</td><td>${totals.FAIL || 0}</td>
+      <td>${reports.join(" &middot; ") || '<span class="muted">—</span>'}</td>`;
+    body.appendChild(row);
+  });
+}
+
+function drawCards(totals) {
+  const keys = [["PASS", "pass"], ["FAIL", "fail"], ["SKIP", "skip"]];
+  $("cards").innerHTML = keys.map(([key, cls]) =>
+    `<div class="card ${cls}"><b>${(totals || {})[key] || 0}</b><span>${key}</span></div>`).join("");
+}
+
+async function refreshState() {
+  const state = await api("/api/state");
+  $("project").textContent = state.project;
+  if (!$("suites").children.length) drawSuites(state.suites);
+  drawRuns(state.runs);
+}
+
+function watch(runId) {
+  currentRun = runId;
+  $("live").classList.remove("hidden");
+  $("runId").textContent = runId;
+  $("console").textContent = "waiting for the first output…";
+  $("links").textContent = "";
+  clearInterval(poller);
+  poller = setInterval(async () => {
+    const state = await api(`/api/run/${runId}`);
+    if (state.error) return;
+    $("runPill").textContent = state.status;
+    $("runPill").className = `pill ${state.status}`;
+    drawCards(state.totals);
+    if (state.console) {
+      const box = $("console");
+      const atBottom = box.scrollTop + box.clientHeight >= box.scrollHeight - 30;
+      box.textContent = state.console;
+      if (atBottom) box.scrollTop = box.scrollHeight;
+    }
+    const links = [];
+    if (state.report) links.push(`<a href="${state.report}" target="_blank">report.html</a>`);
+    if (state.summary) links.push(`<a href="${state.summary}" target="_blank">Test_Summary.html</a>`);
+    if (state.seconds) links.push(`finished in ${state.seconds}s`);
+    $("links").innerHTML = links.join(" &middot; ");
+    if (state.status === "passed" || state.status === "failed") {
+      clearInterval(poller);
+      $("run").disabled = false;
+      $("status").textContent = `run ${runId} ${state.status}`;
+      refreshState();
+    }
+  }, 1500);
+}
+
+$("run").onclick = async () => {
+  if (!selected) return;
+  $("run").disabled = true;
+  $("status").textContent = "starting…";
+  const tags = $("tags").value.split(",").map((t) => t.trim()).filter(Boolean);
+  const answer = await api("/api/run", {
+    suite: selected,
+    env: $("env").value,
+    browser: $("browser").value,
+    headless: $("headless").checked,
+    tags: tags,
+  });
+  if (answer.error) {
+    $("status").textContent = answer.error;
+    $("run").disabled = false;
+    return;
+  }
+  $("status").textContent = `running ${answer.run_id}`;
+  watch(answer.run_id);
+};
+
+$("check").onclick = async () => {
+  $("check").disabled = true;
+  $("live").classList.remove("hidden");
+  $("runId").textContent = "machine check";
+  $("runPill").textContent = "running";
+  $("runPill").className = "pill running";
+  $("console").textContent = "checking…";
+  drawCards({});
+  const answer = await api("/api/check", {});
+  $("console").textContent = answer.output;
+  $("runPill").textContent = answer.ok ? "passed" : "failed";
+  $("runPill").className = `pill ${answer.ok ? "passed" : "failed"}`;
+  $("check").disabled = false;
+};
+
+refreshState();
+setInterval(() => { if (!currentRun || !poller) refreshState(); }, 10000);
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+CI_TTB_ASSIGNMENT 17/11/2026 04:44:15
+
+First version. Covers all 6 questions of the ttb Spark Test Automation assignment.
+Stack: Python 3.13 + Robot Framework 7.2.2
+       Q2 web    -> Browser library 19.5.1 (Playwright)
+       Q3 api    -> RequestsLibrary 0.9.7
+       Q4 mobile -> AppiumLibrary 3.2.1
+
+Verified on this machine:
+  Q1 duplicate items   3/3 PASS
+  Q6 simpleCipher      6/6 PASS
+  Q3 reqres API        2/2 PASS
+  Q2 web login         3/3 PASS
+  Q4 mobile            12 tests, --dryrun PASS only (no Android device here)
+  Launcher             run started from the page, polled, finished, report written
+
+See README.md for how to run it and Test_Case_Design.md for the Q4 test coverage.
