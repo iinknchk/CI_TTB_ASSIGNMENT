@@ -326,6 +326,70 @@ CI_TTB_ASSIGNMENT\
 
 ---
 
+## 4.1 ไฟล์ .bat ทั้งหมด (16 ไฟล์)
+
+ดูที่เดียวจบว่าแต่ละไฟล์ทำอะไร ใช้ตอนไหน
+
+### ตัวรันเทส — `bat_file\TTB_ASSIGNMENT\`
+
+ดับเบิลคลิกได้เลย ทุกตัวสร้างโฟลเดอร์ผลลัพธ์ของตัวเองใน `Results\<ชื่อ>_<hhmmss>\`
+แล้ว gen `Test_Summary.html` ให้อัตโนมัติ จบแล้ว `pause` ค้างไว้ให้อ่านผล
+
+| ไฟล์ | รันอะไร | Argument | ต้องมีอะไรก่อน |
+|---|---|---|---|
+| `Run_All.bat` | ทุก suite **ยกเว้น Q4** | `[ENV]` | อินเทอร์เน็ต + browser |
+| `Run_Offline.bat` | Q1 + Q6 (tag `offline`) | `[ENV]` | ไม่ต้องใช้อะไรเลย ✅ |
+| `Run_Q1_Duplicate.bat` | ข้อ 1 duplicate items | `[ENV]` | — |
+| `Run_Q2_Web_Login.bat` | ข้อ 2 web login | `[ENV]` | browser + เน็ต |
+| `Run_Q3_Api_Reqres.bat` | ข้อ 3 REST API | `[ENV]` | เน็ต |
+| `Run_Q4_Mobile_Todo.bat` | ข้อ 4 mobile **(ปลุก emulator + appium ให้เอง)** | `[ENV] [AVD] [tag]` | Android stack + APK |
+| `Run_Q6_Cipher.bat` | ข้อ 6 simpleCipher | `[ENV]` | — |
+
+`ENV` ไม่ใส่ = `PUBLIC` เช่น `Run_All.bat PUBLIC` หรือ `Run_Q4_Mobile_Todo.bat PUBLIC ttb_test smoke`
+
+> 💡 **จะ demo ให้ใครดู ใช้ `Run_Offline.bat`** — เสร็จใน ~10 วินาที ไม่ต้องพึ่งเน็ตหรือ browser
+
+### ติดตั้ง / ดูแลเครื่อง — `bat_file\Launcher\`
+
+| ไฟล์ | ทำอะไร | รันเมื่อไหร่ |
+|---|---|---|
+| `Setup.bat` | หา/ติดตั้ง Python → pip install → `rfbrowser init` → ตรวจเครื่อง → สร้าง shortcut | **ครั้งแรกบนเครื่องใหม่** |
+| `Setup_Android.bat` | ลง Node + Appium + Android SDK → สร้าง AVD `ttb_test` | ครั้งแรก **ถ้าจะรันข้อ 4** |
+| `Start.bat` | เปิดหน้าเว็บ Launcher (`http://127.0.0.1:8810/`) | ทุกครั้งที่อยากกดรันผ่านหน้าเว็บ |
+| `Check_Machine.bat` | ตรวจอย่างเดียว ไม่ติดตั้งอะไร | เวลาเทสต์พังแล้วไม่รู้ว่าขาดอะไร |
+| `Make_Wheelhouse.bat` | โหลด pip package เก็บไว้เป็นไฟล์ | บนเครื่อง**ที่มีเน็ต** เพื่อเอาไปลงเครื่องที่ไม่มีเน็ต |
+| `Start_Android_Stack.bat` | ปลุก emulator + appium ค้างไว้ | อยากรันข้อ 4 หลายรอบติด ๆ ไม่ต้องรอ boot ทุกครั้ง |
+| `Stop_Android_Stack.bat` | ปิด**เฉพาะ**ตัวที่สคริปต์เปิด | เลิกใช้แล้ว |
+| `Run_Batch.bat` | ตัวกลางที่หน้าเว็บ Launcher เรียก (1 หน้าต่างต่อ 1 รอบ) | **ไม่ต้องกดเอง** หน้าเว็บเรียกให้ |
+
+### ตัวช่วย — `bat_file\`
+
+| ไฟล์ | ทำอะไร |
+|---|---|
+| `load_credentials.bat` | อ่าน `Resources\Settings\credentials.env` เข้า environment ของหน้าต่างนั้น · **ไม่ต้องกดเอง** ทุก bat เรียกให้ตั้งแต่บรรทัดแรก · ไม่มีไฟล์ก็ไม่ error แค่แจ้งแล้วไปต่อ |
+
+### ลำดับที่ควรรันบนเครื่องใหม่
+
+```
+1. bat_file\Launcher\Setup.bat              ← ครั้งเดียว
+2. bat_file\TTB_ASSIGNMENT\Run_Offline.bat  ← เช็กว่าใช้ได้จริง
+3. bat_file\TTB_ASSIGNMENT\Run_All.bat      ← ของจริง (ยกเว้น Q4)
+
+ถ้าจะเอาข้อ 4 ด้วย:
+4. bat_file\Launcher\Setup_Android.bat      ← ครั้งเดียว
+5. วาง APK ที่ Upload_file\Minimal-Todo.apk
+6. bat_file\TTB_ASSIGNMENT\Run_Q4_Mobile_Todo.bat
+```
+
+### สิ่งที่ bat ทุกตัวทำเหมือนกัน
+
+1. หา **project root** จาก path ตัวเอง (ตัดที่ `\bat_file\`) → ย้ายโฟลเดอร์ไปไหนก็ยังรันได้
+2. `call load_credentials.bat` โหลด config
+3. หา **Python** ตามลำดับ: `Resources\Launcher\launcher_python.txt` → `py -3` → `python` → ไม่เจอก็บอกให้รัน `Setup.bat`
+4. `chcp 65001` + `PYTHONIOENCODING=utf-8` → แสดงภาษาไทยและสัญลักษณ์ไม่เพี้ยน
+
+---
+
 ## 5. Config และ secret
 
 | ไฟล์ | ใช้ทำอะไร | commit ไหม |

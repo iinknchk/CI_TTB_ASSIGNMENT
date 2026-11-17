@@ -1,0 +1,18 @@
+# Line endings are decided here, not by each machine's core.autocrlf, so a clone
+# behaves the same on Windows, macOS and the Jenkins agent.
+
+# Everything is text and is stored with LF in the repository.
+* text=auto eol=lf
+
+# ...except the Windows scripts: cmd.exe needs CRLF, and a .bat checked out with
+# LF can break `goto :label` and multi-line blocks.
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# Never touch these.
+*.apk  binary
+*.xlsx binary
+*.png  binary
+*.jpg  binary
+*.zip  binary

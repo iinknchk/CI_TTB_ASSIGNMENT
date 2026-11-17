@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>คู่มือ CI_TTB_ASSIGNMENT</title>
+<style>
+  :root{
+    color-scheme:light dark;
+    --bg:#f5f6f8; --panel:#fff; --fg:#16181c; --soft:#5d636e; --line:#e3e6ea;
+    --accent:#0b63d6; --pass:#1a7f37; --fail:#c3272b; --warn:#9a6700;
+    --code-bg:#f0f2f5;
+    --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Courier New",monospace;
+    --sans:-apple-system,"Segoe UI",Roboto,"Noto Sans Thai","Sarabun",sans-serif;
+  }
+  @media (prefers-color-scheme:dark){
+    :root{--bg:#0f1114;--panel:#171a1e;--fg:#e7e9ec;--soft:#99a0a9;--line:#282d33;
+          --accent:#5aa0ff;--code-bg:#1d2126;}
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.65 var(--sans);}
+  a{color:var(--accent)}
+  code{font-family:var(--mono);font-size:.88em;background:var(--code-bg);
+       padding:1px 5px;border-radius:4px;}
+  pre{background:var(--code-bg);border:1px solid var(--line);border-radius:9px;
+      padding:13px 15px;overflow-x:auto;margin:14px 0;}
+  pre code{background:none;padding:0;font-size:12.5px;line-height:1.55;}
+  .layout{display:flex;max-width:1180px;margin:0 auto;gap:34px;padding:0 20px;}
+  nav{position:sticky;top:0;align-self:flex-start;height:100vh;overflow-y:auto;
+      width:232px;flex:none;padding:28px 0;}
+  nav b{display:block;font-size:11px;letter-spacing:.09em;text-transform:uppercase;
+        color:var(--soft);margin:20px 0 8px;}
+  nav b:first-child{margin-top:0}
+  nav a{display:block;padding:5px 11px;border-radius:7px;text-decoration:none;
+        color:var(--fg);font-size:13.5px;border-left:2px solid transparent;}
+  nav a:hover{background:var(--code-bg)}
+  nav a.on{border-left-color:var(--accent);color:var(--accent);font-weight:600;
+           background:var(--code-bg);}
+  main{flex:1;min-width:0;padding:34px 0 90px;}
+  header.top{margin-bottom:8px}
+  h1{font-size:27px;margin:0 0 6px;letter-spacing:-.02em}
+  .sub{color:var(--soft);font-size:14px;margin:0 0 4px}
+  h2{font-size:21px;margin:46px 0 4px;padding-top:14px;border-top:1px solid var(--line);
+     letter-spacing:-.01em;scroll-margin-top:16px;}
+  h3{font-size:16px;margin:26px 0 8px}
+  table{width:100%;border-collapse:collapse;margin:14px 0;font-size:13.5px;}
+  th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--line);
+        vertical-align:top;}
+  th{font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:var(--soft);
+     font-weight:600;}
+  td code{white-space:nowrap}
+  .box{border:1px solid var(--line);border-left-width:3px;border-radius:9px;
+       padding:12px 15px;margin:16px 0;background:var(--panel);font-size:14px;}
+  .box.warn{border-left-color:var(--warn)} .box.tip{border-left-color:var(--accent)}
+  .box.danger{border-left-color:var(--fail)}
+  .box .lbl{font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;
+            display:block;margin-bottom:5px;}
+  .box.warn .lbl{color:var(--warn)} .box.tip .lbl{color:var(--accent)}
+  .box.danger .lbl{color:var(--fail)}
+  .pass{color:var(--pass);font-weight:600} .no{color:var(--fail);font-weight:600}
+  .flow{font-family:var(--mono);font-size:12.5px;line-height:1.75;white-space:pre;
+        overflow-x:auto;background:var(--code-bg);border:1px solid var(--line);
+        border-radius:9px;padding:15px;margin:14px 0;}
+  ol,ul{padding-left:22px} li{margin:5px 0}
+  .toggle{display:none}
+  @media (max-width:860px){
+    html,body{overflow-x:hidden}
+    .layout{display:block;padding:0 16px}
+    /* a wide table scrolls inside its own box instead of stretching the page */
+    table{display:block;overflow-x:auto;white-space:nowrap}
+    td,th{white-space:normal;min-width:110px}
+    pre,.flow{max-width:100%}
+    img{max-width:100%;height:auto}
+    nav{position:static;width:auto;height:auto;border-bottom:1px solid var(--line);
+        padding:16px 0;}
+    nav .links{display:none} nav .links.open{display:block}
+    .toggle{display:block;font:inherit;font-weight:600;cursor:pointer;width:100%;
+            text-align:left;background:var(--panel);color:inherit;
+            border:1px solid var(--line);border-radius:9px;padding:9px 13px;}
+    main{padding:20px 0 60px}
+  }
+  @media print{
+    nav,.toggle{display:none} .layout{display:block;max-width:none}
+    h2{page-break-after:avoid} pre,table,.box{page-break-inside:avoid}
+    body{background:#fff;color:#000;font-size:11pt}
+  }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<nav>
+  <button class="toggle" onclick="document.querySelector('nav .links').classList.toggle('open')">☰ สารบัญ</button>
+  <div class="links">
+    <b>เริ่มต้น</b>
+    <a href="#overview">ภาพรวม 6 ข้อ</a>
+    <a href="#install">1 · ติดตั้ง</a>
+    <a href="#check">2 · ตรวจเครื่อง</a>
+    <b>การใช้งาน</b>
+    <a href="#launcher">3 · Launcher (หน้าเว็บ)</a>
+    <a href="#bat">4 · ไฟล์ .bat ทั้งหมด</a>
+    <a href="#cli">5 · สั่ง robot เอง</a>
+    <a href="#mobile">6 · ข้อ 4 mobile</a>
+    <a href="#jenkins">7 · Jenkins</a>
+    <b>อ้างอิง</b>
+    <a href="#structure">8 · โครงสร้าง</a>
+    <a href="#config">9 · Config / secret</a>
+    <a href="#results">10 · ผลการรัน</a>
+    <a href="#trouble">11 · ปัญหาที่เจอบ่อย</a>
+  </div>
+</nav>
+
+<main>
+<header class="top">
+  <h1>คู่มือ CI_TTB_ASSIGNMENT</h1>
+  <p class="sub">Test automation — ttb (Spark) Test Automation assignment ทั้ง 6 ข้อ</p>
+  <p class="sub">Python + Robot Framework · Playwright (web) · Appium (mobile) · Jenkins</p>
+</header>
+
+<h2 id="overview">ภาพรวม 6 ข้อ</h2>
+<table>
+<thead><tr><th>ข้อ</th><th>โจทย์</th><th>ไฟล์</th><th>เครื่องมือ</th><th>ผล</th></tr></thead>
+<tbody>
+<tr><td>1</td><td>หา duplicate ระหว่าง List A / List B</td><td><code>Testcase/Q1_Duplicate_Items.robot</code></td><td>Python</td><td class="pass">3/3</td></tr>
+<tr><td>2</td><td>Login the-internet.herokuapp.com</td><td><code>Testcase/Q2_Web_Login.robot</code></td><td>Browser (Playwright)</td><td class="pass">3/3</td></tr>
+<tr><td>3</td><td>GET API reqres.in</td><td><code>Testcase/Q3_Api_Reqres.robot</code></td><td>RequestsLibrary</td><td class="pass">2/2</td></tr>
+<tr><td>4</td><td>Mobile: Minimal-Todo</td><td><code>Testcase/Q4_Mobile_Todo.robot</code></td><td>Appium</td><td>12 เคส</td></tr>
+<tr><td>5</td><td>Jenkins pipeline</td><td><code>Jenkinsfile</code></td><td>Declarative</td><td>3 stages</td></tr>
+<tr><td>6</td><td>simpleCipher</td><td><code>Testcase/Q6_Simple_Cipher.robot</code></td><td>Python</td><td class="pass">6/6</td></tr>
+</tbody>
+</table>
+<p>เอกสารออกแบบ test case อยู่ใน <code>Test_Case_Design.md</code></p>
+
+<h2 id="install">1 · ติดตั้ง (เครื่องใหม่ที่ยังไม่มีอะไรเลย)</h2>
+<h3>Windows — ทางลัด</h3>
+<pre><code>bat_file\Launcher\Setup.bat</code></pre>
+<p>ไฟล์เดียวจบ ทำให้ 5 อย่าง:</p>
+<ol>
+<li>หา Python 3.10+ ไม่เจอก็ติดตั้งจาก <code>bat_file\Launcher\installer\python-3*.exe</code> (ไม่ต้องใช้สิทธิ์ admin)</li>
+<li><code>pip install -r Resources\Launcher\requirements.txt</code> — มีโฟลเดอร์ <code>wheelhouse</code> จะติดตั้งแบบ offline</li>
+<li><code>rfbrowser init</code> ติดตั้งฝั่ง node ของ Browser library + โหลด chromium</li>
+<li>ตรวจเครื่องด้วย <code>setup_check.py</code></li>
+<li>สร้าง shortcut “TTB Automation Launcher” บน Desktop</li>
+</ol>
+<div class="box warn"><span class="lbl">เครื่องที่ไม่มีอินเทอร์เน็ตเลย</span>
+ไปที่เครื่องที่มีเน็ตก่อน รัน <code>Make_Wheelhouse.bat</code> จะได้โฟลเดอร์
+<code>bat_file\Launcher\wheelhouse</code> แล้ว copy ทั้งโปรเจคไปเครื่องปลายทาง
+<code>Setup.bat</code> จะติดตั้งได้โดยไม่ต้องต่อเน็ต<br>
+(ยกเว้น chromium ของ Playwright ที่ต้อง copy แยก หรือชี้ <code>BROWSER_EXECUTABLE</code> ไปที่ chromium ที่มีอยู่แล้ว)</div>
+
+<h3>Linux / macOS</h3>
+<pre><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
+pip install -r Resources/Launcher/requirements.txt
+rfbrowser init</code></pre>
+
+<h3>เพิ่มเติมเฉพาะข้อ 4 (mobile)</h3>
+<pre><code>bat_file\Launcher\Setup_Android.bat</code></pre>
+<p>ลงให้ครบ: Node.js → Appium + uiautomator2 driver → Android SDK → สร้าง AVD <code>ttb_test</code> → ตั้ง <code>ANDROID_HOME</code> ถาวร</p>
+<div class="box warn"><span class="lbl">ครั้งแรกโหลด ~2 GB</span>
+ต้องมีอินเทอร์เน็ต · มี Android Studio อยู่แล้วจะข้ามขั้นโหลด SDK ให้เอง</div>
+
+<h2 id="check">2 · ตรวจว่าเครื่องพร้อมหรือยัง</h2>
+<pre><code>bat_file\Launcher\Check_Machine.bat</code></pre>
+<p>ตัวอย่างผล:</p>
+<pre><code>[OK  ] Python - 3.13.18
+[OK  ] package robot - every suite
+[OK  ] package Browser - Q2 web
+[OK  ] rfbrowser node side - installed
+[WARN] appium - not on PATH - run Setup_Android.bat
+[OK  ] https://reqres.in - HTTP 200 (Q3 api)
+ READY   (WARN = only that one suite is affected)</code></pre>
+<p><code>WARN</code> = กระทบแค่ suite นั้น · <code>FAIL</code> = ต้องแก้ก่อนถึงจะรันได้</p>
+
+<h2 id="launcher">3 · Launcher — หน้าเว็บสำหรับกดรัน</h2>
+<p>ตัวช่วยหลักของโปรเจคนี้ ไม่ต้องจำคำสั่ง <code>robot</code> ไม่ต้องพิมพ์ path
+เลือก suite แล้วกดปุ่มเดียว รันบนเครื่องตัวเอง ไม่ต้องต่อ server ที่ไหน</p>
+
+<h3>3.1 เปิดยังไง</h3>
+<p>ดับเบิลคลิก shortcut <b>“TTB Automation Launcher”</b> บน Desktop
+(<code>Setup.bat</code> สร้างให้ตอนติดตั้ง) หรือเปิดเองที่:</p>
+<pre><code>bat_file\Launcher\Start.bat</code></pre>
+<p>หน้าต่าง console จะเปิดขึ้นมาแล้วเด้ง browser ไปที่
+<code>http://127.0.0.1:8810/</code> ให้อัตโนมัติ</p>
+<div class="box warn"><span class="lbl">อย่าปิดหน้าต่าง console</span>
+หน้าต่างนั้นคือตัว server ถ้าปิด หน้าเว็บจะใช้งานไม่ได้ · ย่อเก็บไว้ได้ ·
+เลิกใช้แล้วกด <code>Ctrl+C</code> หรือปิดหน้าต่างเพื่อหยุด</div>
+
+<h3>3.2 หน้าตาและส่วนประกอบ</h3>
+<p><img src="Resources/Launcher/screenshots/launcher.png" alt="หน้าจอ Launcher"
+   style="width:100%;border:1px solid var(--line);border-radius:10px;margin:14px 0;"></p>
+<table>
+<thead><tr><th>ส่วน</th><th>ทำอะไร</th></tr></thead>
+<tbody>
+<tr><td><b>1 · Choose what to run</b></td><td>การ์ด 8 ใบให้เลือกว่าจะรันอะไร กดแล้วขอบจะเป็นสีน้ำเงิน</td></tr>
+<tr><td><b>2 · Current run</b></td><td>โผล่ตอนกด Run — เลข PASS/FAIL/SKIP + console สด + ลิงก์ report</td></tr>
+<tr><td><b>3 · Recent runs</b></td><td>ประวัติรอบก่อน ๆ พร้อมลิงก์ <code>report</code> และ <code>summary</code></td></tr>
+</tbody>
+</table>
+
+<h3>3.3 การ์ดแต่ละใบรันอะไร</h3>
+<table>
+<thead><tr><th>การ์ด</th><th>รันอะไร</th><th>ใช้ตอนไหน</th></tr></thead>
+<tbody>
+<tr><td><b>Q1 + Q6 (offline)</b></td><td>ข้อ 1 + ข้อ 6</td><td class="pass">เร็วสุด ~10 วินาที ไม่ต้องใช้เน็ต — เหมาะกับการ demo</td></tr>
+<tr><td><b>Q1 duplicate items</b></td><td>ข้อ 1 อย่างเดียว</td><td>เจาะดูเฉพาะข้อ</td></tr>
+<tr><td><b>Q2 web login</b></td><td>ข้อ 2</td><td>ต้องมี browser + เน็ต</td></tr>
+<tr><td><b>Q3 reqres API</b></td><td>ข้อ 3</td><td>ต้องมีเน็ต</td></tr>
+<tr><td><b>Q4 mobile todo</b></td><td>ข้อ 4</td><td>ปลุก emulator + appium ให้เอง</td></tr>
+<tr><td><b>Q6 simpleCipher</b></td><td>ข้อ 6 อย่างเดียว</td><td>เจาะดูเฉพาะข้อ</td></tr>
+<tr><td><b>Everything but Q4</b></td><td>ทุก suite ยกเว้น mobile</td><td>เหมือนที่ CI รัน</td></tr>
+<tr><td><b>Everything</b></td><td>ทุกอย่างรวม Q4</td><td>ต้องมี emulator พร้อม</td></tr>
+</tbody>
+</table>
+
+<h3>3.4 ตัวเลือกก่อนกด Run</h3>
+<table>
+<thead><tr><th>ช่อง</th><th>ความหมาย</th><th>ค่าแนะนำ</th></tr></thead>
+<tbody>
+<tr><td><b>ENV</b></td><td>environment จาก <code>env_config.py</code></td><td><code>PUBLIC</code></td></tr>
+<tr><td><b>Browser (Q2)</b></td><td>chromium / firefox / webkit — มีผลเฉพาะข้อ 2</td><td><code>chromium</code></td></tr>
+<tr><td><b>headless</b></td><td>ติ๊ก = ไม่เปิดหน้าต่าง browser ให้เห็น · เอาติ๊กออก = เห็น browser ทำงานจริง</td><td>ติ๊กไว้ (เร็วกว่า) · เอาออกตอน demo</td></tr>
+<tr><td><b>Only these tags</b></td><td>กรองเฉพาะ tag ที่ใส่ คั่นด้วย comma เช่น <code>smoke, negative</code></td><td>เว้นว่าง = รันหมด</td></tr>
+</tbody>
+</table>
+
+<h3>3.5 ขั้นตอนใช้งานจริง</h3>
+<ol>
+<li>เปิด <code>Start.bat</code> → รอ browser เด้ง</li>
+<li>กด <b>Check machine</b> ก่อน (ครั้งแรกบนเครื่องใหม่) → ดูว่าขาดอะไรไหม</li>
+<li>เลือกการ์ด เช่น <b>Q1 + Q6 (offline)</b> → ขอบเปลี่ยนเป็นสีน้ำเงิน มุมขวาขึ้น <code>ready: ...</code></li>
+<li>กด <b>Run</b></li>
+<li>กล่อง <b>Current run</b> โผล่ขึ้นมา console ไหลสดทุก 1.5 วินาที</li>
+<li>จบแล้วป้ายสถานะเปลี่ยนเป็น <span class="pass">passed</span> หรือ <span class="no">failed</span>
+    พร้อมลิงก์ <code>report.html</code> และ <code>Test_Summary.html</code></li>
+<li>รอบนั้นจะไปโผล่ในตาราง <b>Recent runs</b> ด้วย</li>
+</ol>
+
+<h3>3.6 ผลลัพธ์เก็บไว้ที่ไหน</h3>
+<p>ทุกรอบได้โฟลเดอร์ของตัวเอง ไม่ทับกัน:</p>
+<div class="flow">Results\Launcher\20261117_143022\
+    input.json          ← ตัวเลือกที่กดบนหน้าเว็บ
+    console.txt         ← console ทั้งหมด
+    output.xml          ← ผลดิบของ Robot
+    log.html            ← log ละเอียดทีละ keyword
+    report.html         ← สรุปมาตรฐานของ Robot
+    Test_Summary.html   ← สรุปหน้าเดียวที่โปรเจคนี้ทำเพิ่ม
+    result.json         ← สรุปแบบ JSON ให้หน้าเว็บอ่าน</div>
+
+<h3>3.7 ปุ่ม Check machine</h3>
+<p>รัน <code>setup_check.py</code> แล้วแสดงผลในหน้าเดียวกัน ตรวจครบ: Python,
+package ทุกตัว, ฝั่ง node ของ Browser library, Android SDK / appium / device,
+ไฟล์ APK และการต่อเน็ตไปยัง 2 เว็บที่ใช้เทสต์</p>
+<div class="box tip"><span class="lbl">เทสต์พังแล้วไม่รู้สาเหตุ ให้กดปุ่มนี้ก่อน</span>
+ส่วนใหญ่จะเจอว่าขาด package หรือเน็ตเข้าไม่ถึงเว็บที่เทสต์</div>
+
+<h3>3.8 เลือก Q4 แล้วเกิดอะไรขึ้น</h3>
+<p>หน้าเว็บจะขึ้นหมายเหตุเตือนทันทีที่เลือก และตอนกด Run จะ:</p>
+<ol>
+<li>ปลุก emulator (ถ้ายังไม่มี device) แล้ว<b>รอจน boot เสร็จจริง</b></li>
+<li>ปลุก Appium server (ถ้ายังไม่ตอบ) แล้วรอจนพร้อม</li>
+<li>ค่อยเริ่มรันเทสต์</li>
+</ol>
+<p>ถ้าขาดอะไร จะเขียนบอกใน console แล้วจบรอบนั้นด้วยสถานะ failed
+ไม่ปล่อยให้เทสต์ fail แบบงง ๆ</p>
+
+<h3>3.9 ตัวเลือกขั้นสูง</h3>
+<table>
+<thead><tr><th>ตัวแปร</th><th>ทำอะไร</th><th>ตัวอย่าง</th></tr></thead>
+<tbody>
+<tr><td><code>LAUNCHER_PORT</code></td><td>เปลี่ยน port (default 8810)</td><td><code>set LAUNCHER_PORT=8900</code> ก่อนเปิด <code>Start.bat</code></td></tr>
+<tr><td><code>RL_NO_BROWSER</code></td><td>ไม่ต้องเปิด browser ให้</td><td><code>set RL_NO_BROWSER=1</code></td></tr>
+</tbody>
+</table>
+
+<h3>3.10 Launcher ทำงานยังไงข้างใน</h3>
+<div class="flow">หน้าเว็บ (web\index.html)
+      │  POST /api/run  {suite, env, browser, headless, tags}
+      ▼
+server.py           ← Python standard library ล้วน ไม่ต้องลง package เพิ่ม
+      │  เขียน Results\Launcher\&lt;run_id&gt;\input.json
+      │  แล้วสั่ง Run_Batch.bat &lt;run_id&gt;  (เปิด console ใหม่ 1 หน้าต่าง)
+      ▼
+run_from_json.py    ← อ่าน input.json → ประกอบคำสั่ง robot → รัน
+      │                (ถ้าเป็น Q4 ปลุก emulator + appium ก่อน)
+      ▼
+robot → output.xml → result_parser.py → Test_Summary.html + result.json
+      ▲
+      │  หน้าเว็บ GET /api/run/&lt;run_id&gt; ทุก 1.5 วินาที
+      └── อ่าน console.txt + result.json มาแสดง</div>
+<p>ความปลอดภัย: bind เฉพาะ <code>127.0.0.1</code> ไม่เปิดออกนอกเครื่อง ·
+path ที่พยายามออกนอกโฟลเดอร์โปรเจคได้ <code>403</code> ·
+<code>run_id</code> ต้องตรง pattern และ tag ต้องเป็น <code>[\w.-]+</code> เท่านั้น</p>
+
+<h2 id="bat">4 · ไฟล์ .bat ทั้งหมด (16 ไฟล์)</h2>
+<h3>ตัวรันเทส — <code>bat_file\TTB_ASSIGNMENT\</code></h3>
+<p>ดับเบิลคลิกได้เลย ทุกตัวสร้างโฟลเดอร์ผลใน <code>Results\&lt;ชื่อ&gt;_&lt;hhmmss&gt;\</code>
+แล้ว gen <code>Test_Summary.html</code> ให้อัตโนมัติ จบแล้ว <code>pause</code> ค้างไว้ให้อ่านผล</p>
+<table>
+<thead><tr><th>ไฟล์</th><th>รันอะไร</th><th>Argument</th><th>ต้องมีอะไรก่อน</th></tr></thead>
+<tbody>
+<tr><td><code>Run_All.bat</code></td><td>ทุก suite <b>ยกเว้น Q4</b></td><td><code>[ENV]</code></td><td>เน็ต + browser</td></tr>
+<tr><td><code>Run_Offline.bat</code></td><td>Q1 + Q6 (tag <code>offline</code>)</td><td><code>[ENV]</code></td><td class="pass">ไม่ต้องใช้อะไรเลย</td></tr>
+<tr><td><code>Run_Q1_Duplicate.bat</code></td><td>ข้อ 1 duplicate items</td><td><code>[ENV]</code></td><td>—</td></tr>
+<tr><td><code>Run_Q2_Web_Login.bat</code></td><td>ข้อ 2 web login</td><td><code>[ENV]</code></td><td>browser + เน็ต</td></tr>
+<tr><td><code>Run_Q3_Api_Reqres.bat</code></td><td>ข้อ 3 REST API</td><td><code>[ENV]</code></td><td>เน็ต</td></tr>
+<tr><td><code>Run_Q4_Mobile_Todo.bat</code></td><td>ข้อ 4 mobile <b>(ปลุก emulator + appium เอง)</b></td><td><code>[ENV] [AVD] [tag]</code></td><td>Android stack + APK</td></tr>
+<tr><td><code>Run_Q6_Cipher.bat</code></td><td>ข้อ 6 simpleCipher</td><td><code>[ENV]</code></td><td>—</td></tr>
+</tbody>
+</table>
+<p><code>ENV</code> ไม่ใส่ = <code>PUBLIC</code> เช่น <code>Run_Q4_Mobile_Todo.bat PUBLIC ttb_test smoke</code></p>
+<div class="box tip"><span class="lbl">จะ demo ให้ใครดู</span>
+ใช้ <code>Run_Offline.bat</code> — เสร็จใน ~10 วินาที ไม่ต้องพึ่งเน็ตหรือ browser</div>
+
+<h3>ติดตั้ง / ดูแลเครื่อง — <code>bat_file\Launcher\</code></h3>
+<table>
+<thead><tr><th>ไฟล์</th><th>ทำอะไร</th><th>รันเมื่อไหร่</th></tr></thead>
+<tbody>
+<tr><td><code>Setup.bat</code></td><td>Python → pip → rfbrowser init → ตรวจเครื่อง → shortcut</td><td><b>ครั้งแรกบนเครื่องใหม่</b></td></tr>
+<tr><td><code>Setup_Android.bat</code></td><td>Node + Appium + Android SDK → สร้าง AVD</td><td>ครั้งแรก ถ้าจะรันข้อ 4</td></tr>
+<tr><td><code>Start.bat</code></td><td>เปิดหน้าเว็บ Launcher</td><td>ทุกครั้งที่อยากกดรันผ่านหน้าเว็บ</td></tr>
+<tr><td><code>Check_Machine.bat</code></td><td>ตรวจอย่างเดียว ไม่ติดตั้งอะไร</td><td>เวลาเทสต์พังแล้วไม่รู้ว่าขาดอะไร</td></tr>
+<tr><td><code>Make_Wheelhouse.bat</code></td><td>โหลด pip package เก็บเป็นไฟล์</td><td>บนเครื่อง<b>ที่มีเน็ต</b> เพื่อเอาไปลงเครื่องที่ไม่มี</td></tr>
+<tr><td><code>Start_Android_Stack.bat</code></td><td>ปลุก emulator + appium ค้างไว้</td><td>รันข้อ 4 หลายรอบติด ๆ</td></tr>
+<tr><td><code>Stop_Android_Stack.bat</code></td><td>ปิด<b>เฉพาะ</b>ตัวที่สคริปต์เปิด</td><td>เลิกใช้แล้ว</td></tr>
+<tr><td><code>Run_Batch.bat</code></td><td>ตัวกลางที่หน้าเว็บ Launcher เรียก</td><td><b>ไม่ต้องกดเอง</b></td></tr>
+</tbody>
+</table>
+
+<h3>ตัวช่วย — <code>bat_file\</code></h3>
+<table>
+<thead><tr><th>ไฟล์</th><th>ทำอะไร</th></tr></thead>
+<tbody><tr><td><code>load_credentials.bat</code></td>
+<td>อ่าน <code>Resources\Settings\credentials.env</code> เข้า environment ของหน้าต่างนั้น ·
+<b>ไม่ต้องกดเอง</b> ทุก bat เรียกให้ตั้งแต่บรรทัดแรก · ไม่มีไฟล์ก็ไม่ error แค่แจ้งแล้วไปต่อ</td></tr></tbody>
+</table>
+
+<h3>ลำดับที่ควรรันบนเครื่องใหม่</h3>
+<div class="flow">1. bat_file\Launcher\Setup.bat               ← ครั้งเดียว
+2. bat_file\TTB_ASSIGNMENT\Run_Offline.bat   ← เช็กว่าใช้ได้จริง
+3. bat_file\TTB_ASSIGNMENT\Run_All.bat       ← ของจริง (ยกเว้น Q4)
+
+ถ้าจะเอาข้อ 4 ด้วย:
+4. bat_file\Launcher\Setup_Android.bat       ← ครั้งเดียว
+5. วาง APK ที่ Upload_file\Minimal-Todo.apk
+6. bat_file\TTB_ASSIGNMENT\Run_Q4_Mobile_Todo.bat</div>
+
+<h3>สิ่งที่ bat ทุกตัวทำเหมือนกัน</h3>
+<ol>
+<li>หา <b>project root</b> จาก path ตัวเอง (ตัดที่ <code>\bat_file\</code>) → ย้ายโฟลเดอร์ไปไหนก็ยังรันได้</li>
+<li><code>call load_credentials.bat</code> โหลด config</li>
+<li>หา <b>Python</b> ตามลำดับ: <code>launcher_python.txt</code> → <code>py -3</code> → <code>python</code> → ไม่เจอก็บอกให้รัน <code>Setup.bat</code></li>
+<li><code>chcp 65001</code> + <code>PYTHONIOENCODING=utf-8</code> → ภาษาไทยไม่เพี้ยน</li>
+</ol>
+
+<h2 id="cli">5 · สั่ง robot เอง</h2>
+<pre><code>robot -v ENV:PUBLIC -d Results/manual Testcase/</code></pre>
+<pre><code>robot -v ENV:PUBLIC --exclude Q4 -d Results/ci Testcase/</code></pre>
+<p>เปิด browser แบบเห็นหน้าจอ:</p>
+<pre><code>robot -v HEADLESS:False -d Results/visible Testcase/Q2_Web_Login.robot</code></pre>
+<p>ใช้ chromium ที่มีอยู่แล้ว ไม่ให้ Playwright โหลดใหม่:</p>
+<pre><code>robot -v BROWSER_EXECUTABLE:C:\path\to\chrome.exe -d Results/x Testcase/Q2_Web_Login.robot</code></pre>
+<h3>Tag ที่กรองได้</h3>
+<p><code>Q1</code> <code>Q2</code> <code>Q3</code> <code>Q4</code> <code>Q6</code> ·
+<code>offline</code> · <code>smoke</code> · <code>positive</code> <code>negative</code> ·
+<code>crud</code> <code>reminder</code> <code>persistence</code> <code>settings</code> ·
+<code>1</code> <code>2</code> <code>3</code> (priority)</p>
+
+<h2 id="mobile">6 · ข้อ 4 mobile — ทำงานยังไง</h2>
+<p>Robot ไม่ได้คุยกับมือถือตรง ๆ แต่ส่งผ่านลูกโซ่นี้:</p>
+<div class="flow">Testcase/Q4_Mobile_Todo.robot
+      │  AppiumLibrary (Python)
+      ▼
+Appium server   http://127.0.0.1:4723
+      │  UiAutomator2 driver
+      ▼
+adb  ──►  emulator หรือมือถือจริง
+      │
+      ▼
+แอป Minimal-Todo (com.avjindersinghsekhon.minimaltodo)</div>
+<p><code>Run_Q4_Mobile_Todo.bat</code> ทำให้ครบวงจรเอง <b>ไม่ต้องเปิด terminal ค้างไว้เอง</b>:</p>
+<ol>
+<li>เช็ค APK → ไม่มีก็บอกวิธี build แล้วหยุด</li>
+<li>ไม่มี device → สั่ง emulator ขึ้น แล้วรอจน <code>sys.boot_completed = 1</code> จริง</li>
+<li>Appium ไม่ตอบ → สั่ง appium ขึ้น แล้วรอจน <code>/status</code> ตอบ 200</li>
+<li>รันเทสต์ → สร้าง <code>Test_Summary.html</code></li>
+<li><b>ปิดเฉพาะสิ่งที่ตัวเองเปิด</b> — device ที่คุณเปิดเองอยู่แล้วจะไม่ถูกยุ่ง</li>
+</ol>
+<p>ตั้ง <code>TTB_KEEP_EMULATOR=1</code> ถ้าอยากให้ emulator ค้างไว้หลังรันเสร็จ</p>
+<h3>ค่าที่ต้องแก้ให้ตรงเครื่อง</h3>
+<table>
+<thead><tr><th>ตัวแปร (ใน <code>Settings.robot</code>)</th><th>default</th><th>แก้เป็น</th></tr></thead>
+<tbody>
+<tr><td><code>${DEVICE_NAME}</code></td><td><code>emulator-5554</code></td><td>ชื่อที่ <code>adb devices</code> แสดง</td></tr>
+<tr><td><code>${PLATFORM_VERSION}</code></td><td><code>13</code></td><td><code>adb shell getprop ro.build.version.release</code></td></tr>
+<tr><td><code>${APPIUM_SERVER}</code></td><td><code>http://127.0.0.1:4723</code></td><td>เปลี่ยนเมื่อใช้ cloud device</td></tr>
+</tbody>
+</table>
+<h3>สร้างไฟล์ APK</h3>
+<pre><code>git clone https://github.com/avjinder/Minimal-Todo.git
+cd Minimal-Todo
+gradlew assembleDebug</code></pre>
+<p>แล้ว copy <code>app\build\outputs\apk\debug\app-debug.apk</code> ไปที่ <code>Upload_file\Minimal-Todo.apk</code></p>
+<div class="box warn"><span class="lbl">repo นี้เก่า (2017)</span>
+ใช้ Gradle 4.6 + compileSdk 23 ต้อง build ด้วย <b>JDK 8</b> ถ้าเครื่องเป็น JDK 17+ จะ build ไม่ผ่าน</div>
+<h3>ดูสถานะ Android ทั้งหมดในคำสั่งเดียว</h3>
+<pre><code>python Resources\Library\android_tools.py status</code></pre>
+<div class="box tip"><span class="lbl">ไม่อยากลง emulator</span>
+ใช้ cloud device farm ได้ (BrowserStack / Sauce Labs / Kobiton) แก้แค่ <code>${APPIUM_SERVER}</code>
+แล้วเพิ่ม capability user/key ใน <code>Open Todo App</code> — ตัว test case ไม่ต้องแก้เลย</div>
+
+<h2 id="jenkins">7 · Jenkins (ข้อ 5)</h2>
+<p><code>Jenkinsfile</code> ที่ root มี 3 stage ตามโจทย์ (+ stage ติดตั้ง dependency):</p>
+<ol>
+<li><b>Checkout Code From Git</b></li>
+<li><b>Install Dependencies</b></li>
+<li><b>Run Test Automate</b></li>
+<li><b>Send Result To Jenkins</b> — Robot Framework plugin (กราฟ trend) + JUnit + archive + publishHTML</li>
+</ol>
+<div class="box warn"><span class="lbl">หมายเหตุสำคัญ</span>
+โจทย์เขียน <code>stages { }</code> ซ้ำ 3 บล็อก ซึ่งผิด syntax ของ declarative pipeline
+(<code>Multiple occurrences of the stages section</code>) ไฟล์นี้รวมเป็น <code>stages</code> เดียว
+ที่มี <code>stage</code> 3 ตัวตามเจตนาของโจทย์</div>
+<p>ก่อนใช้จริง: ติดตั้ง plugin <b>Robot Framework</b>, <b>JUnit</b>, <b>HTML Publisher</b> บน Jenkins</p>
+<p>Q4 ไม่ถูกรวมใน CI (ต้องมี emulator) — ถ้าต้องการให้เลือก parameter <code>SUITES = all</code></p>
+
+<h2 id="structure">8 · โครงสร้างโปรเจค</h2>
+<div class="flow">CI_TTB_ASSIGNMENT\
+    bat_file\                    ไฟล์ .bat ทั้งหมด
+        TTB_ASSIGNMENT\          ตัวรันเทสแยกตามข้อ
+        Launcher\                Setup / Start / Check / Android
+    Excel_sync_robot_files\      Excel สำหรับ data-driven
+    Import\
+        Library_import.robot     รวม Library + Variables
+        Path_import.robot        รวม Resource (ไฟล์เดียวที่ Testcase import)
+        Mobile_import.robot      แยกสำหรับ Appium
+    Keyword\
+        Common\  Web\  Api\  Mobile\
+    Locator\                     selector ของเว็บ / resource id ของแอป
+    Resources\
+        Library\                 .py keyword libraries
+        Settings\                Settings.robot, credentials.env.example
+        Launcher\                server.py, web\index.html, result_parser.py
+    Results\                     ผลการรัน (gitignore)
+    Testcase\                    Q1 / Q2 / Q3 / Q4 / Q6
+    Upload_file\                 วาง Minimal-Todo.apk ที่นี่
+    Current_version_&lt;ddmmyyyy&gt;_&lt;hhmmss&gt;.txt
+    Jenkinsfile</div>
+<h3>หลักการของโครงสร้างนี้</h3>
+<ul>
+<li><b>Testcase import <code>Path_import.robot</code> ไฟล์เดียว</b> — เพิ่ม library หรือ keyword ใหม่ แก้ที่ <code>Import\</code> ที่เดียว</li>
+<li><b>ทุก path ใช้ <code>${CURDIR}/..</code></b> ไม่มี absolute path ย้ายโฟลเดอร์แล้วยังรันได้</li>
+<li><b><code>${ROOT}</code> ประกาศที่ <code>Settings.robot</code> ที่เดียว</b> แล้ว derive ตัวอื่นต่อ</li>
+<li><b>Locator แยกจาก Keyword</b> — UI เปลี่ยนแก้ไฟล์เดียว ไม่ต้องแตะ logic</li>
+<li><b>Mobile แยก import</b> — AppiumLibrary กับ Browser มี keyword ชื่อซ้ำ (<code>Click Element</code>, <code>Get Text</code>) จึงไม่โหลดเข้า suite เดียวกัน</li>
+</ul>
+
+<h2 id="config">9 · Config และ secret</h2>
+<table>
+<thead><tr><th>ไฟล์</th><th>ใช้ทำอะไร</th><th>commit ไหม</th></tr></thead>
+<tbody>
+<tr><td><code>Resources/Settings/Settings.robot</code></td><td>ตัวแปรกลาง: URL, test data, timeout, locator</td><td class="pass">✓</td></tr>
+<tr><td><code>Resources/Library/env_config.py</code></td><td>แปลง <code>-v ENV:PUBLIC</code> เป็น URL</td><td class="pass">✓</td></tr>
+<tr><td><code>Resources/Settings/credentials.env.example</code></td><td>template ของ credential</td><td class="pass">✓</td></tr>
+<tr><td><code>Resources/Settings/credentials.env</code></td><td>ค่าจริง โหลดโดย <code>load_credentials.bat</code></td><td class="no">✗ gitignore</td></tr>
+</tbody>
+</table>
+<p>เพิ่ม environment ใหม่: แก้ <code>ENVS</code> ใน <code>env_config.py</code> แล้วเรียกด้วย <code>-v ENV:&lt;ชื่อ&gt;</code></p>
+<div class="box danger"><span class="lbl">ห้ามเด็ดขาด</span>
+อย่า commit <code>credentials.env</code> ที่มีค่าจริงขึ้น repo สาธารณะ</div>
+
+<h2 id="results">10 · ผลการรันบนเครื่องที่พัฒนา</h2>
+<table>
+<thead><tr><th>Suite</th><th>ผล</th></tr></thead>
+<tbody>
+<tr><td>Q1 Duplicate Items</td><td class="pass">3/3 PASS</td></tr>
+<tr><td>Q6 Simple Cipher</td><td class="pass">6/6 PASS</td></tr>
+<tr><td>Q3 Api Reqres</td><td class="pass">2/2 PASS</td></tr>
+<tr><td>Q2 Web Login</td><td class="pass">3/3 PASS</td></tr>
+<tr><td>Q4 Mobile Todo</td><td>12 tests — <code>--dryrun</code> ผ่านหมด (ยังไม่ได้รันจริงเพราะไม่มี Android device บนเครื่องที่พัฒนา)</td></tr>
+<tr><td><b>รวม</b></td><td class="pass"><b>14/14 PASS + 12 dryrun</b></td></tr>
+</tbody>
+</table>
+
+<h2 id="trouble">11 · ปัญหาที่เจอบ่อย</h2>
+<table>
+<thead><tr><th>อาการ</th><th>สาเหตุ / วิธีแก้</th></tr></thead>
+<tbody>
+<tr><td><code>Executable doesn't exist at .../headless_shell</code></td><td>ยังไม่ได้ <code>rfbrowser init</code> หรือ chromium คนละเวอร์ชัน → รัน <code>rfbrowser init</code> หรือใช้ <code>-v BROWSER_EXECUTABLE:&lt;path&gt;</code></td></tr>
+<tr><td>Q3 ได้ 401 ทุกเคส</td><td>reqres.in ไม่ได้รับ header <code>x-api-key</code> → ตรวจ <code>REQRES_API_KEY</code> ใน <code>env_config.py</code></td></tr>
+<tr><td>Q2 ต่อเว็บไม่ได้</td><td>เครือข่ายองค์กรบล็อก → ใช้ <code>https://</code> และเปิด allowlist ของ <code>the-internet.herokuapp.com</code></td></tr>
+<tr><td><code>Keyword with same name defined multiple times</code></td><td>โหลด AppiumLibrary กับ Browser พร้อมกัน → Q4 ต้อง import <code>Mobile_import.robot</code> เท่านั้น</td></tr>
+<tr><td>Q4 <code>Could not find a connected Android device</code></td><td>ยังไม่ได้เปิด emulator หรือ appium ไม่ได้รัน → ใช้ <code>Run_Q4_Mobile_Todo.bat</code> ที่ปลุกให้เอง</td></tr>
+<tr><td>Launcher เปิดไม่ขึ้น / port ชน</td><td>ตั้ง <code>LAUNCHER_PORT=8900</code> แล้วรันใหม่</td></tr>
+<tr><td>ลง <code>robotframework-appiumlibrary==2.1.0</code> ไม่ผ่านบน Python 3.12+</td><td>เวอร์ชันเก่าดึง <code>kitchen</code> ที่ build ไม่ได้ → ใช้ <code>3.2.1</code> ตาม <code>requirements.txt</code></td></tr>
+<tr><td>รัน .bat แล้วภาษาไทยเพี้ยน</td><td>ปกติ bat ตั้ง <code>chcp 65001</code> ให้แล้ว ถ้ายังเพี้ยนให้เปลี่ยน font ของ console เป็น Consolas หรือ TH Sarabun</td></tr>
+</tbody>
+</table>
+
+</main>
+</div>
+<script>
+// highlight the section currently on screen in the sidebar
+const links = [...document.querySelectorAll('nav .links a')];
+const targets = links.map(a => document.querySelector(a.getAttribute('href'))).filter(Boolean);
+const mark = () => {
+  let current = targets[0];
+  for (const section of targets) {
+    if (section.getBoundingClientRect().top <= 90) current = section;
+  }
+  links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + current.id));
+};
+mark();
+addEventListener('scroll', mark, { passive: true });
+links.forEach(a => a.addEventListener('click', () =>
+  document.querySelector('nav .links').classList.remove('open')));
+</script>
+</body>
+</html>
