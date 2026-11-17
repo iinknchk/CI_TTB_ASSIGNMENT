@@ -80,6 +80,12 @@
   <section class="panel">
     <h2>1 &middot; Choose what to run</h2>
     <div class="suites" id="suites"></div>
+    <p class="muted hidden" id="androidNote">
+      Q4 needs an Android device. The run starts the emulator and the Appium server by
+      itself and waits for them — the first boot can take a few minutes. A machine that
+      has never run it needs <code>bat_file\Launcher\Setup_Android.bat</code> once, and
+      <code>Upload_file/Minimal-Todo.apk</code> must exist.
+    </p>
 
     <div class="row">
       <div>
@@ -155,6 +161,7 @@ function drawSuites(suites) {
         other.setAttribute("aria-pressed", String(other === button)));
       $("run").disabled = false;
       $("status").textContent = `ready: ${suite.label}`;
+      $("androidNote").classList.toggle("hidden", !["Q4", "ALL"].includes(suite.key));
     };
     $("suites").appendChild(button);
   });

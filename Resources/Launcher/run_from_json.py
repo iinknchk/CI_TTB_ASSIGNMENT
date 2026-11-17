@@ -59,6 +59,18 @@ def main():
         cfg = json.load(stream)
     cfg["run_id"] = run_id
 
+    # Q4 needs a booted device and a running Appium before robot starts
+    if cfg.get("suite") in ("Q4", "ALL"):
+        sys.path.insert(0, os.path.join(ROOT, "Resources", "Library"))
+        import android_tools
+        print("[launcher] Q4 selected - making sure the emulator and appium are up")
+        if android_tools.ensure_emulator(cfg.get("avd", "ttb_test")) or android_tools.ensure_appium():
+            print("[launcher] the Android stack is not ready - see the lines above")
+            with open(os.path.join(run_dir, "result.json"), "w", encoding="utf-8") as stream:
+                json.dump({"run_id": run_id, "return_code": 1,
+                           "error": "android stack not ready"}, stream, indent=2)
+            return 1
+
     command = build_command(cfg, run_dir)
     print("=" * 60)
     print(f" CI_TTB_ASSIGNMENT LAUNCHER   run {run_id}")

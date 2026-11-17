@@ -164,37 +164,70 @@ adb  ->  emulator หรือมือถือจริง
 แอป Minimal-Todo (com.avjindersinghsekhon.minimaltodo)
 ```
 
-ต้องเตรียม 3 อย่าง:
+### ติดตั้งครั้งแรก (ครั้งเดียวจบ)
 
-| # | ของที่ต้องมี | ติดตั้ง / ตรวจ |
-|---|---|---|
-| 1 | **Appium server** | `npm install -g appium` แล้ว `appium driver install uiautomator2` |
-| 2 | **เครื่อง Android** | emulator จาก Android Studio (AVD Manager) หรือมือถือจริงเปิด USB debugging — ตรวจด้วย `adb devices` ต้องเห็นชื่อเครื่อง |
-| 3 | **ไฟล์ APK** | build จาก source แล้ววางที่ `Upload_file/Minimal-Todo.apk` |
-
-**ขั้นตอนรันจริง**
-
-```bash
-appium
+```
+bat_file\Launcher\Setup_Android.bat
 ```
 
-เปิด terminal ไว้หน้าต่างหนึ่ง (อย่าปิด) แล้วอีกหน้าต่างหนึ่ง:
+ไฟล์เดียวลงให้ครบ — ข้ามให้อัตโนมัติถ้ามีอยู่แล้ว:
 
-```bash
-adb devices
-```
+1. **Node.js** (winget หรือจาก `installer\node-v*.msi`)
+2. **Appium + uiautomator2 driver** (`npm install -g appium`)
+3. **Android SDK** — ดาวน์โหลด command line tools, กด accept licence ให้เอง แล้วลง
+   `platform-tools` + `emulator` + `platforms;android-33` + system image
+4. **สร้าง AVD ชื่อ `ttb_test`** (Pixel 5, Android 13)
+5. `setx ANDROID_HOME` ให้ถาวร แล้วแสดงสถานะ
 
-ต้องเห็นประมาณ `emulator-5554   device` ถ้าเห็น `unauthorized` ให้กดอนุญาตบนหน้าจอมือถือ
+> ⏱ ครั้งแรกโหลดประมาณ **2 GB** ต้องมีอินเทอร์เน็ต
+> ถ้ามี Android Studio อยู่แล้วจะข้ามขั้นตอนโหลด SDK ไปเอง
+
+เหลืออย่างเดียวที่ต้องทำเอง: **ไฟล์ APK** → วางที่ `Upload_file/Minimal-Todo.apk`
+
+### รัน — กดไฟล์เดียว
 
 ```
 bat_file\TTB_ASSIGNMENT\Run_Q4_Mobile_Todo.bat
 ```
 
-หรือสั่งตรง:
+ไฟล์นี้ทำให้ครบวงจรเอง **ไม่ต้องเปิด terminal ค้างไว้เอง**:
+
+1. เช็คว่ามี `Upload_file\Minimal-Todo.apk` ไหม — ไม่มีก็บอกวิธี build แล้วหยุด
+2. ไม่มี device → **สั่ง emulator ขึ้นเอง** แล้วรอจน `sys.boot_completed = 1` จริง ๆ
+3. Appium ไม่ตอบ → **สั่ง appium ขึ้นเอง** แล้วรอจน `/status` ตอบ 200
+4. รัน `Testcase\Q4_Mobile_Todo.robot`
+5. สร้าง `Test_Summary.html`
+6. **ปิดเฉพาะสิ่งที่ตัวเองเปิด** — ถ้าคุณเปิด emulator ไว้เองอยู่แล้ว มันจะไม่ไปยุ่ง
+
+ถ้ามี device/appium เปิดอยู่แล้ว ขั้นตอน 2–3 ใช้เวลา < 0.1 วินาที (ไม่เปิดซ้ำ)
+
+**Argument ที่รับได้** — `Run_Q4_Mobile_Todo.bat [ENV] [ชื่อ AVD] [tag]`
+
+```
+Run_Q4_Mobile_Todo.bat                        รันทั้ง 12 เคส ใช้ AVD ttb_test
+Run_Q4_Mobile_Todo.bat PUBLIC ttb_test smoke  เฉพาะ smoke
+```
+
+ตั้ง `TTB_KEEP_EMULATOR=1` ถ้าอยากให้ emulator ค้างไว้หลังรันเสร็จ (รันซ้ำจะเร็วขึ้นมาก)
+
+**ไฟล์ช่วยอื่น ๆ**
+
+| ไฟล์ / คำสั่ง | ทำอะไร |
+|---|---|
+| `bat_file\Launcher\Start_Android_Stack.bat` | ปลุก emulator + appium ค้างไว้เฉย ๆ |
+| `bat_file\Launcher\Stop_Android_Stack.bat` | ปิดเฉพาะตัวที่สคริปต์เปิด |
+| `python Resources/Library/android_tools.py status` | ดูว่า SDK/adb/emulator/appium/AVD/device/apk ครบไหม |
+
+สั่ง robot ตรง ๆ ก็ได้ (แต่ต้องเปิด emulator + appium เองก่อน):
 
 ```bash
 robot -v ENV:PUBLIC -d Results/mobile Testcase/Q4_Mobile_Todo.robot
 ```
+
+### รันจากหน้า Launcher
+
+เลือก **Q4 mobile todo** แล้วกด Run ได้เลย — หน้าเว็บจะปลุก emulator + appium ให้เหมือนกัน
+และแสดงหมายเหตุเตือนว่า boot ครั้งแรกใช้เวลาสักพัก
 
 **ค่าที่ต้องแก้ให้ตรงเครื่องของคุณ** ใน `Resources/Settings/Settings.robot`:
 

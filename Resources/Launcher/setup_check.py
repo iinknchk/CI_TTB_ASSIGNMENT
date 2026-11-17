@@ -82,31 +82,44 @@ def check_browser_node_side():
 
 
 def check_appium():
-    appium = shutil.which("appium")
-    if not appium:
-        report("WARN", "appium", "not on PATH - Q4 mobile cannot run (npm install -g appium)")
-        return
+    """Everything Q4 needs. All WARN: the other four suites do not care."""
+    sys.path.insert(0, os.path.join(ROOT, "Resources", "Library"))
     try:
-        version = subprocess.run([appium, "--version"], capture_output=True, text=True,
-                                 timeout=60).stdout.strip()
-    except (OSError, subprocess.SubprocessError) as error:
-        report("WARN", "appium", f"found but did not answer: {error}")
+        import android_tools
+    except ImportError as error:
+        report("WARN", "android_tools", f"cannot be imported: {error}")
         return
-    report("OK", "appium", f"{version} ({appium})")
-    adb = shutil.which("adb")
-    if not adb:
-        report("WARN", "adb", "not on PATH - no Android device can be reached")
-        return
-    try:
-        devices = subprocess.run([adb, "devices"], capture_output=True, text=True, timeout=60).stdout
-    except (OSError, subprocess.SubprocessError) as error:
-        report("WARN", "adb", f"did not answer: {error}")
-        return
-    attached = [l.split()[0] for l in devices.splitlines()[1:] if l.strip() and "device" in l]
-    if attached:
-        report("OK", "android device", ", ".join(attached))
+
+    sdk = android_tools.sdk_root()
+    if sdk:
+        report("OK", "android sdk", sdk)
     else:
-        report("WARN", "android device", "none attached - start an emulator for Q4")
+        report("WARN", "android sdk", "not found - run bat_file\\Launcher\\Setup_Android.bat")
+
+    appium = android_tools.appium()
+    if appium:
+        code, output = android_tools.run([appium, "--version"], timeout=60)
+        report("OK", "appium", f"{output.strip() or '?'} ({appium})")
+    else:
+        report("WARN", "appium", "not on PATH - run Setup_Android.bat (or npm install -g appium)")
+
+    if not android_tools.adb():
+        report("WARN", "adb", "not found - no Android device can be reached")
+    else:
+        attached = android_tools.devices()
+        if attached:
+            report("OK", "android device", ", ".join(attached))
+        else:
+            avds = android_tools.avds()
+            if avds:
+                report("WARN", "android device", f"none running - Run_Q4_Mobile_Todo.bat starts AVD {avds[0]}")
+            else:
+                report("WARN", "android device", "none running and no AVD - run Setup_Android.bat")
+
+    if android_tools.appium_up():
+        report("OK", "appium server", android_tools.APPIUM_URL)
+    else:
+        report("WARN", "appium server", "not answering - Run_Q4_Mobile_Todo.bat starts it")
 
 
 def check_apk():
