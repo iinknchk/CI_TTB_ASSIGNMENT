@@ -32,7 +32,7 @@ pipeline {
             steps {
                 checkout scmGit(
                     branches: [[name: "*/${params.BRANCH}"]],
-                    userRemoteConfigs: [[url: 'https://github.com/<your-account>/CI_TTB_ASSIGNMENT.git']]
+                    userRemoteConfigs: [[url: 'https://github.com/iinknchk/CI_TTB_ASSIGNMENT.git']]
                 )
                 sh 'git --no-pager log -1 --oneline'
             }
