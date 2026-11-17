@@ -147,6 +147,83 @@ robot -v HEADLESS:False -d Results/visible Testcase/Q2_Web_Login.robot
 robot -v BROWSER_EXECUTABLE:/path/to/chrome -d Results/x Testcase/Q2_Web_Login.robot
 ```
 
+### 2.4 รันข้อ 4 (mobile) — ต้องมีอะไรบ้าง
+
+Robot ไม่ได้คุยกับมือถือตรง ๆ แต่ส่งคำสั่งผ่านลูกโซ่นี้:
+
+```
+Testcase/Q4_Mobile_Todo.robot
+      |  AppiumLibrary (Python)
+      v
+Appium server   http://127.0.0.1:4723      <-- ต้องเปิดค้างไว้
+      |  UiAutomator2 driver
+      v
+adb  ->  emulator หรือมือถือจริง
+      |
+      v
+แอป Minimal-Todo (com.avjindersinghsekhon.minimaltodo)
+```
+
+ต้องเตรียม 3 อย่าง:
+
+| # | ของที่ต้องมี | ติดตั้ง / ตรวจ |
+|---|---|---|
+| 1 | **Appium server** | `npm install -g appium` แล้ว `appium driver install uiautomator2` |
+| 2 | **เครื่อง Android** | emulator จาก Android Studio (AVD Manager) หรือมือถือจริงเปิด USB debugging — ตรวจด้วย `adb devices` ต้องเห็นชื่อเครื่อง |
+| 3 | **ไฟล์ APK** | build จาก source แล้ววางที่ `Upload_file/Minimal-Todo.apk` |
+
+**ขั้นตอนรันจริง**
+
+```bash
+appium
+```
+
+เปิด terminal ไว้หน้าต่างหนึ่ง (อย่าปิด) แล้วอีกหน้าต่างหนึ่ง:
+
+```bash
+adb devices
+```
+
+ต้องเห็นประมาณ `emulator-5554   device` ถ้าเห็น `unauthorized` ให้กดอนุญาตบนหน้าจอมือถือ
+
+```
+bat_file\TTB_ASSIGNMENT\Run_Q4_Mobile_Todo.bat
+```
+
+หรือสั่งตรง:
+
+```bash
+robot -v ENV:PUBLIC -d Results/mobile Testcase/Q4_Mobile_Todo.robot
+```
+
+**ค่าที่ต้องแก้ให้ตรงเครื่องของคุณ** ใน `Resources/Settings/Settings.robot`:
+
+| ตัวแปร | ค่า default | แก้เป็น |
+|---|---|---|
+| `${DEVICE_NAME}` | `emulator-5554` | ชื่อที่ `adb devices` แสดง |
+| `${PLATFORM_VERSION}` | `13` | เวอร์ชัน Android ของเครื่องนั้น (`adb shell getprop ro.build.version.release`) |
+| `${APPIUM_SERVER}` | `http://127.0.0.1:4723` | เปลี่ยนเมื่อใช้ cloud device |
+
+**ถ้าไม่มีเครื่อง Android ให้ลง** — ใช้ cloud device farm ได้ (BrowserStack / Sauce Labs / Kobiton)
+แก้แค่ `${APPIUM_SERVER}` ให้ชี้ไป endpoint ของเจ้านั้น แล้วเพิ่ม capability ของ user/key
+ใน `Open Todo App` (`Keyword/Mobile/Todo.robot`) — ตัว test case ไม่ต้องแก้เลย
+
+**ลองเฉพาะชุด smoke ก่อน** (4 เคสแรก ใช้เวลาไม่กี่นาที):
+
+```bash
+robot --include smoke -d Results/smoke Testcase/Q4_Mobile_Todo.robot
+```
+
+**ตรวจว่า locator ตรงกับแอปจริงไหม** โดยไม่ต้องรัน test:
+
+```bash
+appium driver run uiautomator2 inspector
+```
+
+หรือใช้ `uiautomatorviewer` / Appium Inspector เปิดดู resource-id ของหน้าจอจริง
+
+---
+
 ### Tag ที่ใช้กรองได้
 
 `Q1` `Q2` `Q3` `Q4` `Q6` · `offline` (ไม่ต้องใช้เน็ต) · `smoke` · `positive` `negative` · `crud` `reminder` `persistence` `settings` · `1` `2` `3` (priority)
