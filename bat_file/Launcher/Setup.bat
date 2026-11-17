@@ -2,13 +2,16 @@
 setlocal enabledelayedexpansion
 title CI_TTB_ASSIGNMENT - Setup
 rem ============================================================================
-rem  Setup.bat : prepare a NEW machine to run this project.
-rem    1. find Python 3.10+ (or install it from .\installer\python-3*.exe)
-rem    2. install the pip packages (from .\wheelhouse when present = no internet)
+rem  Setup.bat : prepare this machine to run the test suites.
+rem    1. find Python 3.10+ (installs it with winget when it is missing)
+rem    2. pip install -r Resources\Launcher\requirements.txt
 rem    3. rfbrowser init - the node side of Browser library (Playwright)
-rem    4. check the machine (packages, browser, Appium, network)
+rem    4. check the machine
 rem    5. put "TTB Automation Launcher" on the desktop
-rem  Safe to run again at any time.
+rem  Safe to run again at any time - every step is skipped when already done.
+rem
+rem  Needs an internet connection.
+rem  For question 4 (mobile) run Setup_Android.bat afterwards.
 rem ============================================================================
 set "HERE=%~dp0"
 set "_UROOT=!HERE:\bat_file\=|!"
@@ -35,31 +38,33 @@ if not defined PY (
     for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do if exist "%%D\python.exe" call :try_python "%%D\python.exe"
 )
 if not defined PY (
-    set "INSTALLER="
-    for %%F in ("!HERE!installer\python-3*.exe") do set "INSTALLER=%%F"
-    if not defined INSTALLER (
+    where winget >nul 2>&1
+    if errorlevel 1 (
         echo.
-        echo  [FAIL] Python not found and no installer in:
-        echo         !HERE!installer\
-        echo  Put python-3.12.x-amd64.exe ^(from python.org^) there and run Setup.bat again,
-        echo  or install Python yourself and tick "Add python.exe to PATH".
+        echo  [FAIL] Python 3.10+ not found and winget is not available.
+        echo         Install Python from https://www.python.org/downloads/windows/
+        echo         and tick "Add python.exe to PATH", then run Setup.bat again.
         echo.
         pause
         exit /b 1
     )
-    echo        Installing !INSTALLER! for this user ^(no admin needed^)...
-    "!INSTALLER!" /quiet InstallAllUsers=0 PrependPath=1 Include_test=0 Include_doc=0
+    echo        Not found - installing with winget...
+    winget install -e --id Python.Python.3.12 --scope user --accept-source-agreements --accept-package-agreements
+    rem winget updates PATH only for NEW windows, so look in the install folder
     for /d %%D in ("%LOCALAPPDATA%\Programs\Python\Python3*") do if exist "%%D\python.exe" call :try_python "%%D\python.exe"
 )
 if not defined PY (
-    echo  [FAIL] The Python install did not work. Ask IT for Python 3.12 for this user.
+    echo.
+    echo  [WARN] Python was installed but is not visible in this window.
+    echo         Close this window, open a new one and run Setup.bat again.
+    echo.
     pause
     exit /b 1
 )
 echo        Using !PY!
 > "!PY_FILE!" echo !PY!
 
-rem ---------------------------------------------------------------- 2. pip packages
+rem ---------------------------------------------------------------- 2. packages
 echo.
 echo [2/5] Installing pip packages...
 "!PY!" -c "import robot, RequestsLibrary, Browser, AppiumLibrary, requests, openpyxl, yaml" >nul 2>&1
@@ -67,37 +72,28 @@ if not errorlevel 1 (
     echo        All packages are already installed - skip.
     goto :node
 )
-set "REQ=!LAUNCHER!\requirements.txt"
-set "PIP_SRC="
-if exist "!HERE!wheelhouse\*.whl" (
-    set "PIP_SRC=--no-index --find-links "!HERE!wheelhouse""
-    echo        Offline install from !HERE!wheelhouse
-)
-rem short timeout: a machine with no internet should fail fast, not hang
-set "PIP_OPT=--timeout 20 --retries 1 --disable-pip-version-check"
-"!PY!" -m pip install !PIP_OPT! !PIP_SRC! -r "!REQ!"
+"!PY!" -m pip install --disable-pip-version-check -r "!LAUNCHER!\requirements.txt"
 if errorlevel 1 (
     echo        Retrying for this user only ^(--user^)...
-    "!PY!" -m pip install --user !PIP_OPT! !PIP_SRC! -r "!REQ!"
+    "!PY!" -m pip install --user --disable-pip-version-check -r "!LAUNCHER!\requirements.txt"
 )
 if errorlevel 1 (
     echo.
-    echo  [WARN] pip could not install everything ^(no internet / proxy?^).
-    echo         Fix: on a machine WITH internet run Make_Wheelhouse.bat, copy the
-    echo         wheelhouse folder into !HERE! and run Setup.bat again.
+    echo  [WARN] pip could not install everything. Check the internet connection
+    echo         ^(or the proxy^) and run Setup.bat again. The check below shows
+    echo         exactly which packages are still missing.
 )
 
 :node
 rem ---------------------------------------------------------------- 3. rfbrowser
 echo.
 echo [3/5] Installing the node side of Browser library ^(Playwright^)...
-echo        This downloads chromium the first time ^(~150 MB^) and needs internet.
+echo        Downloads chromium the first time ^(~150 MB^).
 "!PY!" -m Browser.entry init
 if errorlevel 1 (
-    echo  [WARN] rfbrowser init failed. Q2 ^(web^) cannot run until it succeeds.
-    echo         With a chromium already on this machine you can instead run:
-    echo         Run_Q2_Web_Login.bat after setting BROWSER_EXECUTABLE in
-    echo         Resources\Settings\Settings.robot
+    echo  [WARN] rfbrowser init failed - question 2 ^(web^) cannot run until it works.
+    echo         With a chromium already on this machine you can instead pass
+    echo         -v BROWSER_EXECUTABLE:^<path to chrome.exe^> when running robot.
 )
 
 rem ---------------------------------------------------------------- 4. check
@@ -121,6 +117,7 @@ if "!CHECK_RC!"=="0" (
     echo  SETUP DONE WITH WARNINGS - see the [FAIL] lines above.
     echo  Full report: Results\Launcher\setup_check_%COMPUTERNAME%.txt
 )
+echo  For question 4 ^(mobile^) run bat_file\Launcher\Setup_Android.bat next.
 echo ==================================================================
 pause
 exit /b 0

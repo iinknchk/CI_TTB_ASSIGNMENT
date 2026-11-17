@@ -136,17 +136,15 @@
 <pre><code>bat_file\Launcher\Setup.bat</code></pre>
 <p>ไฟล์เดียวจบ ทำให้ 5 อย่าง:</p>
 <ol>
-<li>หา Python 3.10+ ไม่เจอก็ติดตั้งจาก <code>bat_file\Launcher\installer\python-3*.exe</code> (ไม่ต้องใช้สิทธิ์ admin)</li>
-<li><code>pip install -r Resources\Launcher\requirements.txt</code> — มีโฟลเดอร์ <code>wheelhouse</code> จะติดตั้งแบบ offline</li>
+<li>หา Python 3.10+ ไม่เจอก็ติดตั้งให้เองด้วย <code>winget</code> (ลงแบบ user ไม่ต้องใช้สิทธิ์ admin)</li>
+<li><code>pip install -r Resources\Launcher\requirements.txt</code></li>
 <li><code>rfbrowser init</code> ติดตั้งฝั่ง node ของ Browser library + โหลด chromium</li>
 <li>ตรวจเครื่องด้วย <code>setup_check.py</code></li>
 <li>สร้าง shortcut “TTB Automation Launcher” บน Desktop</li>
 </ol>
-<div class="box warn"><span class="lbl">เครื่องที่ไม่มีอินเทอร์เน็ตเลย</span>
-ไปที่เครื่องที่มีเน็ตก่อน รัน <code>Make_Wheelhouse.bat</code> จะได้โฟลเดอร์
-<code>bat_file\Launcher\wheelhouse</code> แล้ว copy ทั้งโปรเจคไปเครื่องปลายทาง
-<code>Setup.bat</code> จะติดตั้งได้โดยไม่ต้องต่อเน็ต<br>
-(ยกเว้น chromium ของ Playwright ที่ต้อง copy แยก หรือชี้ <code>BROWSER_EXECUTABLE</code> ไปที่ chromium ที่มีอยู่แล้ว)</div>
+<div class="box warn"><span class="lbl">ต้องมีอินเทอร์เน็ต</span>
+ขั้นตอนที่ 2 กับ 3 โหลด package และ chromium จากเน็ต · ถ้าเครื่องมี chromium อยู่แล้ว
+และไม่อยากให้โหลดซ้ำ ใช้ <code>-v BROWSER_EXECUTABLE:&lt;path&gt;</code> ตอนรันแทนได้</div>
 
 <h3>Linux / macOS</h3>
 <pre><code>python3 -m venv .venv &amp;&amp; source .venv/bin/activate
@@ -291,7 +289,7 @@ robot → output.xml → result_parser.py → Test_Summary.html + result.json
 path ที่พยายามออกนอกโฟลเดอร์โปรเจคได้ <code>403</code> ·
 <code>run_id</code> ต้องตรง pattern และ tag ต้องเป็น <code>[\w.-]+</code> เท่านั้น</p>
 
-<h2 id="bat">4 · ไฟล์ .bat ทั้งหมด (16 ไฟล์)</h2>
+<h2 id="bat">4 · ไฟล์ .bat ทั้งหมด (15 ไฟล์)</h2>
 <h3>ตัวรันเทส — <code>bat_file\TTB_ASSIGNMENT\</code></h3>
 <p>ดับเบิลคลิกได้เลย ทุกตัวสร้างโฟลเดอร์ผลใน <code>Results\&lt;ชื่อ&gt;_&lt;hhmmss&gt;\</code>
 แล้ว gen <code>Test_Summary.html</code> ให้อัตโนมัติ จบแล้ว <code>pause</code> ค้างไว้ให้อ่านผล</p>
@@ -315,11 +313,10 @@ path ที่พยายามออกนอกโฟลเดอร์โป
 <table>
 <thead><tr><th>ไฟล์</th><th>ทำอะไร</th><th>รันเมื่อไหร่</th></tr></thead>
 <tbody>
-<tr><td><code>Setup.bat</code></td><td>Python → pip → rfbrowser init → ตรวจเครื่อง → shortcut</td><td><b>ครั้งแรกบนเครื่องใหม่</b></td></tr>
+<tr><td><code>Setup.bat</code></td><td>Python (winget) → pip → rfbrowser init → ตรวจเครื่อง → shortcut</td><td><b>ครั้งแรกบนเครื่องใหม่</b></td></tr>
 <tr><td><code>Setup_Android.bat</code></td><td>Node + Appium + Android SDK → สร้าง AVD</td><td>ครั้งแรก ถ้าจะรันข้อ 4</td></tr>
 <tr><td><code>Start.bat</code></td><td>เปิดหน้าเว็บ Launcher</td><td>ทุกครั้งที่อยากกดรันผ่านหน้าเว็บ</td></tr>
 <tr><td><code>Check_Machine.bat</code></td><td>ตรวจอย่างเดียว ไม่ติดตั้งอะไร</td><td>เวลาเทสต์พังแล้วไม่รู้ว่าขาดอะไร</td></tr>
-<tr><td><code>Make_Wheelhouse.bat</code></td><td>โหลด pip package เก็บเป็นไฟล์</td><td>บนเครื่อง<b>ที่มีเน็ต</b> เพื่อเอาไปลงเครื่องที่ไม่มี</td></tr>
 <tr><td><code>Start_Android_Stack.bat</code></td><td>ปลุก emulator + appium ค้างไว้</td><td>รันข้อ 4 หลายรอบติด ๆ</td></tr>
 <tr><td><code>Stop_Android_Stack.bat</code></td><td>ปิด<b>เฉพาะ</b>ตัวที่สคริปต์เปิด</td><td>เลิกใช้แล้ว</td></tr>
 <tr><td><code>Run_Batch.bat</code></td><td>ตัวกลางที่หน้าเว็บ Launcher เรียก</td><td><b>ไม่ต้องกดเอง</b></td></tr>
@@ -427,7 +424,7 @@ gradlew assembleDebug</code></pre>
 <div class="flow">CI_TTB_ASSIGNMENT\
     bat_file\                    ไฟล์ .bat ทั้งหมด
         TTB_ASSIGNMENT\          ตัวรันเทสแยกตามข้อ
-        Launcher\                Setup / Start / Check / Android
+        Launcher\                Setup / Setup_Android / Start / Check
     Excel_sync_robot_files\      Excel สำหรับ data-driven
     Import\
         Library_import.robot     รวม Library + Variables

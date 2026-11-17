@@ -26,16 +26,14 @@ bat_file\Launcher\Setup.bat
 
 ไฟล์เดียวจบ ทำให้ 5 อย่าง:
 
-1. หา Python 3.10+ ถ้าไม่เจอจะติดตั้งจาก `bat_file\Launcher\installer\python-3*.exe` ให้เอง (ไม่ต้องใช้สิทธิ์ admin)
-2. `pip install -r Resources\Launcher\requirements.txt` (ถ้ามีโฟลเดอร์ `wheelhouse` จะติดตั้งแบบ offline)
+1. หา Python 3.10+ ถ้าไม่เจอจะติดตั้งให้เองด้วย `winget` (ลงแบบ user ไม่ต้องใช้สิทธิ์ admin)
+2. `pip install -r Resources\Launcher\requirements.txt`
 3. `rfbrowser init` — ติดตั้งฝั่ง node ของ Browser library พร้อมดาวน์โหลด chromium
 4. ตรวจเครื่องด้วย `setup_check.py`
 5. สร้าง shortcut **"TTB Automation Launcher"** บน Desktop
 
-> **เครื่องที่ไม่มีอินเทอร์เน็ตเลย:** ไปที่เครื่องที่มีเน็ตก่อน รัน `bat_file\Launcher\Make_Wheelhouse.bat`
-> จะได้โฟลเดอร์ `bat_file\Launcher\wheelhouse` แล้ว copy ทั้งโปรเจคไปเครื่องปลายทาง
-> จากนั้น `Setup.bat` จะติดตั้งได้โดยไม่ต้องต่อเน็ต
-> (ยกเว้น chromium ของ Playwright ที่ต้อง copy แยก หรือชี้ `BROWSER_EXECUTABLE` ไปที่ chromium ที่มีอยู่แล้ว)
+> **ต้องมีอินเทอร์เน็ต** — ขั้นตอนที่ 2 กับ 3 โหลด package และ chromium จากเน็ต
+> ถ้าเครื่องมี chromium อยู่แล้วและไม่อยากให้โหลดซ้ำ ใช้ `-v BROWSER_EXECUTABLE:<path>` ตอนรันแทนได้
 
 ### Linux / macOS
 
@@ -172,7 +170,7 @@ bat_file\Launcher\Setup_Android.bat
 
 ไฟล์เดียวลงให้ครบ — ข้ามให้อัตโนมัติถ้ามีอยู่แล้ว:
 
-1. **Node.js** (winget หรือจาก `installer\node-v*.msi`)
+1. **Node.js** (ติดตั้งด้วย `winget`)
 2. **Appium + uiautomator2 driver** (`npm install -g appium`)
 3. **Android SDK** — ดาวน์โหลด command line tools, กด accept licence ให้เอง แล้วลง
    `platform-tools` + `emulator` + `platforms;android-33` + system image
@@ -288,8 +286,7 @@ Q4 ไม่ถูกรวมใน CI (ต้องมี emulator) — ถ้
 CI_TTB_ASSIGNMENT\
     bat_file\                       ไฟล์ .bat ทั้งหมด
         TTB_ASSIGNMENT\             ตัวรัน test แยกตามข้อ
-        Launcher\                   Setup / Start / Check_Machine / Make_Wheelhouse
-            installer\              วาง python-3*.exe สำหรับเครื่อง offline
+        Launcher\                   Setup / Setup_Android / Start / Check_Machine
         load_credentials.bat        โหลด credentials.env เข้า environment
     Excel_sync_robot_files\         ไฟล์ Excel สำหรับ data-driven (ยังไม่ใช้ในชุดนี้)
     Import\
@@ -326,7 +323,7 @@ CI_TTB_ASSIGNMENT\
 
 ---
 
-## 4.1 ไฟล์ .bat ทั้งหมด (16 ไฟล์)
+## 4.1 ไฟล์ .bat ทั้งหมด (15 ไฟล์)
 
 ดูที่เดียวจบว่าแต่ละไฟล์ทำอะไร ใช้ตอนไหน
 
@@ -353,11 +350,10 @@ CI_TTB_ASSIGNMENT\
 
 | ไฟล์ | ทำอะไร | รันเมื่อไหร่ |
 |---|---|---|
-| `Setup.bat` | หา/ติดตั้ง Python → pip install → `rfbrowser init` → ตรวจเครื่อง → สร้าง shortcut | **ครั้งแรกบนเครื่องใหม่** |
+| `Setup.bat` | หา/ติดตั้ง Python (winget) → pip install → `rfbrowser init` → ตรวจเครื่อง → สร้าง shortcut | **ครั้งแรกบนเครื่องใหม่** |
 | `Setup_Android.bat` | ลง Node + Appium + Android SDK → สร้าง AVD `ttb_test` | ครั้งแรก **ถ้าจะรันข้อ 4** |
 | `Start.bat` | เปิดหน้าเว็บ Launcher (`http://127.0.0.1:8810/`) | ทุกครั้งที่อยากกดรันผ่านหน้าเว็บ |
 | `Check_Machine.bat` | ตรวจอย่างเดียว ไม่ติดตั้งอะไร | เวลาเทสต์พังแล้วไม่รู้ว่าขาดอะไร |
-| `Make_Wheelhouse.bat` | โหลด pip package เก็บไว้เป็นไฟล์ | บนเครื่อง**ที่มีเน็ต** เพื่อเอาไปลงเครื่องที่ไม่มีเน็ต |
 | `Start_Android_Stack.bat` | ปลุก emulator + appium ค้างไว้ | อยากรันข้อ 4 หลายรอบติด ๆ ไม่ต้องรอ boot ทุกครั้ง |
 | `Stop_Android_Stack.bat` | ปิด**เฉพาะ**ตัวที่สคริปต์เปิด | เลิกใช้แล้ว |
 | `Run_Batch.bat` | ตัวกลางที่หน้าเว็บ Launcher เรียก (1 หน้าต่างต่อ 1 รอบ) | **ไม่ต้องกดเอง** หน้าเว็บเรียกให้ |

@@ -6,10 +6,6 @@ Resources/Launcher/launcher_python.txt
 Results/*
 !Results/.keep
 
-# offline install payloads (large binaries, not source)
-bat_file/Launcher/wheelhouse/
-bat_file/Launcher/installer/*.exe
-
 # the app under test for Q4 - built from https://github.com/avjinder/Minimal-Todo
 Upload_file/*.apk
 

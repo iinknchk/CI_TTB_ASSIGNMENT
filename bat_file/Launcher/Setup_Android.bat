@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 title CI_TTB_ASSIGNMENT - Setup Android (for Q4 mobile)
 rem ============================================================================
 rem  Setup_Android.bat : prepare this machine to run the Q4 mobile suite.
-rem    1. Node.js          (winget, or .\installer\node-v*.msi)
+rem    1. Node.js          (winget)
 rem    2. appium + the uiautomator2 driver   (npm -g)
 rem    3. Android command line tools + platform-tools + emulator + a system image
 rem    4. create the AVD "ttb_test"
@@ -39,22 +39,15 @@ if not errorlevel 1 (
     for /f "delims=" %%V in ('node -v') do echo        already installed %%V
     goto :appium
 )
-set "NODE_MSI="
-for %%F in ("!HERE!installer\node-v*.msi") do set "NODE_MSI=%%F"
-if defined NODE_MSI (
-    echo        Installing !NODE_MSI! ...
-    msiexec /i "!NODE_MSI!" /qn /norestart
-) else (
-    where winget >nul 2>&1
-    if errorlevel 1 (
-        echo  [FAIL] Node.js not found, no installer in !HERE!installer\ and winget is missing.
-        echo         Install Node LTS from https://nodejs.org then run this file again.
-        pause
-        exit /b 1
-    )
-    echo        Installing with winget ^(accept the prompts if any^)...
-    winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
+where winget >nul 2>&1
+if errorlevel 1 (
+    echo  [FAIL] Node.js not found and winget is not available.
+    echo         Install Node LTS from https://nodejs.org then run this file again.
+    pause
+    exit /b 1
 )
+echo        Installing with winget ^(accept the prompts if any^)...
+winget install -e --id OpenJS.NodeJS.LTS --accept-source-agreements --accept-package-agreements
 rem winget / msiexec change PATH only for NEW windows
 set "PATH=%ProgramFiles%\nodejs;%APPDATA%\npm;!PATH!"
 where node >nul 2>&1
